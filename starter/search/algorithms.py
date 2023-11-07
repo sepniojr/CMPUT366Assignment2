@@ -139,13 +139,44 @@ class CBSState:
         """
         Computes the cost of a CBS state. Assumes the sum of the cost of the paths as the objective function.
         """
+
+        astar = AStar(self._map)
+
+        for i in range(self._k):
+            cost, path = astar.search(self._starts[i], self._goals[i], self._constraints[i])
+            self._cost = self._cost + cost
+            self._paths[i] = path
         pass
+
+
+        #print(self._paths)
+        #print(self._cost)
     
     def is_solution(self):
         """
         Verifies whether a CBS state is a solution. If it isn't, it returns False and a tuple with 
         the conflicting state and time step; returns True, None otherwise. 
         """
+        tuple = set()
+    
+        for i in range(self._k):
+            for state in self._paths[i]:
+                #print(tuple)
+                if (state, state.get_g()) in tuple:
+                    #print("State in list")
+                    return False, (state, state.get_g())
+                else:
+                    tuple.add((state, state.get_g()))
+
+        
+        return True, None
+        
+
+
+        
+
+
+
         pass
 
     def successors(self):

@@ -30,6 +30,9 @@ def main():
     goals = [State(4, 1), State(2, 1)]
     cbs_state = CBSState(gridded_map, starts, goals)
     cbs_search = CBS()
+    cbs_state.compute_cost()
+    if cbs_state.is_solution():
+        print("Conflict spotted! Invalid solution!")
     paths, cost = cbs_search.search(cbs_state)
     if paths is not None:
         print('Solution paths encountered for the easy test: ')
