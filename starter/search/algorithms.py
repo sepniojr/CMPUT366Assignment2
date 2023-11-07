@@ -157,33 +157,41 @@ class CBSState:
         Verifies whether a CBS state is a solution. If it isn't, it returns False and a tuple with 
         the conflicting state and time step; returns True, None otherwise. 
         """
-        tuple = set()
-    
+        tuple = []
+        index = []
+
         for i in range(self._k):
             for state in self._paths[i]:
                 #print(tuple)
                 if (state, state.get_g()) in tuple:
+                    a1 = index[tuple.index((state, state.get_g()))]
                     #print("State in list")
-                    return False, (state, state.get_g())
+                    return False, (state, state.get_g()), a1, i
                 else:
-                    tuple.add((state, state.get_g()))
+                    tuple.append((state, state.get_g()))
+                    index.append(i)
 
-        
-        return True, None
-        
+        return True, None, None, None
+    
 
-
-        
-
-
-
-        pass
-
-    def successors(self):
+    def successors(self, conflict, agent1, agent2):
         """
         Generates the two children of a CBS state that doesn't represent a solution.
         """
-        pass
+ 
+        conflict_state = conflict[0]
+        conflict_time = conflict[1]
+        #print(conflict_time)
+        constrained_agents = []
+
+        for i in [agent1, agent2]:
+            c = CBSState(self._map, self._starts, self._goals)
+            c._constraints = copy.deepcopy(self._constraints)
+            c.set_constraint(conflict_state, conflict_time, i)
+            constrained_agents.append(c)
+
+        return constrained_agents
+    
 
     def set_constraint(self, conflict_state, conflict_time, agent):
         """
@@ -217,7 +225,23 @@ class CBS():
         """
         Performs CBS search for the problem defined in start.
         """
-        return None, None
+        open_list = []
+        successors = []
+        start.compute_cost()
+        heapq.heappush(open_list,start)
+
+
+        while len(open_list) != 0:
+            n = heapq.heappop(open_list)
+            isSolution, conflict, agent1, agent2 = n.is_solution()
+            if isSolution:
+                return n._paths, n._cost
+            successors = n.successors(conflict, agent1, agent2)
+            for n_prime in successors:
+                n_prime.compute_cost()
+                heapq.heappush(open_list,n_prime)
+            
+        return start._paths,start._cost
         
 class AStar():
 
