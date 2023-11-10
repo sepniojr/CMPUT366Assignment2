@@ -139,18 +139,17 @@ class CBSState:
         """
         Computes the cost of a CBS state. Assumes the sum of the cost of the paths as the objective function.
         """
-
+        cost_total = 0
         astar = AStar(self._map)
-
         for i in range(self._k):
             cost, path = astar.search(self._starts[i], self._goals[i], self._constraints[i])
-            self._cost = self._cost + cost
+            cost_total = cost_total + cost
             self._paths[i] = path
-        pass
+        
 
+        self.set_cost(cost_total)
+        
 
-        #print(self._paths)
-        #print(self._cost)
     
     def is_solution(self):
         """
@@ -161,11 +160,10 @@ class CBSState:
         index = []
 
         for i in range(self._k):
+            #print(self._paths[i])
             for state in self._paths[i]:
-                #print(tuple)
                 if (state, state.get_g()) in tuple:
                     a1 = index[tuple.index((state, state.get_g()))]
-                    #print("State in list")
                     return False, (state, state.get_g()), a1, i
                 else:
                     tuple.append((state, state.get_g()))
@@ -181,7 +179,6 @@ class CBSState:
  
         conflict_state = conflict[0]
         conflict_time = conflict[1]
-        #print(conflict_time)
         constrained_agents = []
 
         for i in [agent1, agent2]:
@@ -228,20 +225,23 @@ class CBS():
         open_list = []
         successors = []
         start.compute_cost()
+
+
+        if start.get_cost() < 0:
+            return None, None
         heapq.heappush(open_list,start)
-
-
         while len(open_list) != 0:
             n = heapq.heappop(open_list)
             isSolution, conflict, agent1, agent2 = n.is_solution()
             if isSolution:
-                return n._paths, n._cost
+                return n._paths, n.get_cost()
             successors = n.successors(conflict, agent1, agent2)
             for n_prime in successors:
                 n_prime.compute_cost()
+
                 heapq.heappush(open_list,n_prime)
             
-        return start._paths,start._cost
+        return start._paths,start.get_cost()
         
 class AStar():
 
@@ -284,7 +284,7 @@ class AStar():
         
         self.OPEN.clear()
         self.CLOSED.clear()
-        
+
         heapq.heappush(self.OPEN, self.start)
         self.CLOSED[start.__hash__()] = self.start
         while len(self.OPEN) > 0:
